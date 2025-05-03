@@ -5,14 +5,23 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { axiosClient } from "@/api/axios"
-import { AxiosResponse } from "axios"
 import { getCookie } from "@/api/getCookie"
+import { useNavigate } from "react-router-dom"
+import { Loader } from "lucide-react"
+import { useContext } from "react"
+import { Context, ContextType } from "@/Context/ContextProvider"
+export  const  DASHBORAD_STUDANT = '/dashboard'
 const formShecma = z.object({
   email: z.string().email(),
   password: z.string().min(5, { message: 'password must be greater than 5 characters.' })
     .max(50, 'passwor must be less than 50 characters.')
 })
+
+
+
 const Login = () => {
+  const { setAuth } = useContext(Context) as ContextType
+  const navigate = useNavigate()
   const form = useForm<z.infer<typeof formShecma>>({
     resolver: zodResolver(formShecma),
     defaultValues: {
@@ -20,16 +29,24 @@ const Login = () => {
       password: ''
     }
   })
-  const submit = async (values: z.infer<typeof formShecma>) => {    
-await axiosClient.get('/sanctum/csrf-cookie'); 
-// Ensure CSRF cookie is set
-    const data: AxiosResponse<any> = await axiosClient.post('/login', values,{
+  const submit = async (values: z.infer<typeof formShecma>) => {
+    await axiosClient.get('/sanctum/csrf-cookie');
+    // Ensure CSRF cookie is set
+    await axiosClient.post('/login', values, {
       headers: {
-        'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '',  
-    }
+        'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '',
+      }
+    }).then((response) => {
+      if (response.status === 204) {
+        setAuth({ isAuth: true, email: form.getValues('email') })
+        navigate(DASHBORAD_STUDANT)
+      }
+    }).catch((error) => {
+      form.setError('email',{
+        message: error.response.data.errors.email
+      })
     });
-    console.log(data);           
-                  
+
   }
   return (
     <div className="flex flex-col justify-center items-center h-screen ">
@@ -62,7 +79,10 @@ await axiosClient.get('/sanctum/csrf-cookie');
               </FormItem>
             )} />
 
-            <Button type="submit" className="float-end w-40 cursor-pointer">Submit</Button>
+            <Button type="submit" disabled={form.formState.isSubmitting} className="float-end w-40 cursor-pointer">
+            {form.formState.isSubmitting && <Loader className="mx-2 animate-spin" /> }
+            Login
+            </Button>
           </form>
         </Form>
       </div>

@@ -1,4 +1,6 @@
 import Layout from "@/layouts/Layout";
+import LayoutStudent from "@/layouts/LayoutStudent";
+import Dashboard from "@/pages/Dashboard";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
@@ -18,8 +20,17 @@ export const Route = createBrowserRouter([
             {
                 path: 'users',
                 element: <Users/>
-            }
+            },
+          
         ],
+    },{
+        element : <LayoutStudent/>,
+        children:[
+            {
+                path :'/dashboard',
+                element: <Dashboard/>
+            }
+        ]
     },
     {
         path: 'login',
